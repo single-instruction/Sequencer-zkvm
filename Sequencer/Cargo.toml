@@ -1,25 +1,24 @@
 [package]
-name = "engine"
+name = "sequencer"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 anyhow = "1"
-async-trait = "0.1"
-chrono = { version = "0.4", features = ["clock", "serde"] }
+axum = { version = "0.7", features = ["macros", "ws"] }
+axum-extra = { version = "0.9", features = ["jsonrpc"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
 tracing = "0.1"
-hex = "0.4"
-
-# DB
+tracing-subscriber = { version="0.3", features = ["env-filter", "fmt"] }
 sqlx = { version = "0.7", default-features = false, features = [
-  "runtime-tokio-rustls", "postgres", "macros", "chrono"
+  "runtime-tokio-rustls","postgres","macros","chrono","uuid"
 ] }
-
-# optional hashing placeholder during wiring-up
+chrono = { version = "0.4", features = ["clock","serde"] }
+uuid = { version="1", features=["v4"] }
+hex = "0.4"
+# same hashing stub as in engine for now
 blake3 = "1"
 
-[features]
-default = []
+engine = { path = "../engine" }
