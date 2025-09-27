@@ -1,0 +1,25 @@
+[package]
+name = "engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+async-trait = "0.1"
+chrono = { version = "0.4", features = ["clock", "serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "time"] }
+tracing = "0.1"
+hex = "0.4"
+
+# DB
+sqlx = { version = "0.7", default-features = false, features = [
+  "runtime-tokio-rustls", "postgres", "macros", "chrono"
+] }
+
+# optional hashing placeholder during wiring-up
+blake3 = "1"
+
+[features]
+default = []
