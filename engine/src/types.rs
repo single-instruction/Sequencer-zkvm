@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use std::cmp::Ordering;
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug,PartialOrd,Ord)]
 pub struct PairId(pub u32);
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
