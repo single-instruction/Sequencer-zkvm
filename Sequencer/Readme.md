@@ -9,7 +9,7 @@ GET /v1/blocks/:block_number — block header + commitments.
 GET /healthz — liveness.
 GET /metrics —
 
-JSON-RPC (mirror the above)
+JSON-RPC
 
 book_getTopOfBook(pair_id)
 book_getSnapshot(pair_id,depth)
@@ -22,6 +22,6 @@ WebSocket channels
 
 /ws → topics:
 
-book.{pair_id} 
+book.{pair_id}
 fills.{pair_id}
 blocks.new

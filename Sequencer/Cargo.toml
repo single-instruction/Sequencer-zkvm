@@ -6,7 +6,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1"
 axum = { version = "0.7", features = ["macros", "ws"] }
-axum-extra = { version = "0.9", features = ["jsonrpc"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "sync"] }
@@ -18,7 +17,8 @@ sqlx = { version = "0.7", default-features = false, features = [
 chrono = { version = "0.4", features = ["clock","serde"] }
 uuid = { version="1", features=["v4"] }
 hex = "0.4"
-# same hashing stub as in engine for now
 blake3 = "1"
+async-trait = "0.1"
 
 engine = { path = "../engine" }
+

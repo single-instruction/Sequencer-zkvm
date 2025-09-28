@@ -1,4 +1,4 @@
-use crate::types::{Order, FillDraft, MarketParams};
+use engine::types::{Order, FillDraft, MarketParams};
 
 pub trait PoseidonHasher {
     fn h_bytes(&self, domain_tag: u64, bytes: &[u8]) -> [u8;32];
@@ -21,12 +21,12 @@ impl PoseidonHasher for BlakePoseidonStub {
 }
 
 pub mod domains {
-    pub const ORDER_LEAF: u64 = 0x6F726465725F6C656166;   // "order_leaf"
-    pub const ORDERS_ACC: u64 = 0x6F72646572735F616363;   // "orders_acc"
-    pub const FILL_LEAF:  u64 = 0x66696C6C5F6C656166;     // "fill_leaf"
-    pub const FILLS_ACC:  u64 = 0x66696C6C735F616363;     // "fills_acc"
-    pub const MARKET_LEAF:u64 = 0x6D61726B65745F6C656166; // "market_leaf"
-    pub const MARKETS_ACC:u64 = 0x6D61726B6574735F616363; // "markets_acc"
+    pub const ORDER_LEAF: u64 = 0x656166;   // "order_leaf"
+    pub const ORDERS_ACC: u64 = 0x616363;   // "orders_acc"
+    pub const FILL_LEAF:  u64 = 0x656166;     // "fill_leaf"
+    pub const FILLS_ACC:  u64 = 0x616363;     // "fills_acc"
+    pub const MARKET_LEAF:u64 = 0x6C656166; // "market_leaf"
+    pub const MARKETS_ACC:u64 = 0xF616363; // "markets_acc"
 }
 
 pub fn commit_orders<H: PoseidonHasher>(h: &H, orders: &[Order]) -> [u8;32] {

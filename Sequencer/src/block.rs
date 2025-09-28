@@ -1,5 +1,7 @@
-use crate::types::*;
+use engine::types::*;
+use async_trait::async_trait;
 use crate::commit::{PoseidonHasher, commit_orders, commit_fills, commit_markets};
+use engine::r#match;
 
 #[derive(Clone, Copy, Debug)]
 pub struct BlockNumber(pub u64);
@@ -54,7 +56,7 @@ pub struct BlockBuilder<D: Db, H: PoseidonHasher> {
     hasher: H,
 }
 
-impl<D: Db, H: PoseidonHasher> BlockBuilder<D, H> {
+impl<D: Db, H: PoseidonHasher + engine::pid::Poseidon32> BlockBuilder<D, H> {
     pub fn new(db: D, hasher: H) -> Self { Self { db, hasher } }
 
     pub async fn build_block(
@@ -86,7 +88,7 @@ impl<D: Db, H: PoseidonHasher> BlockBuilder<D, H> {
         let mut all_residuals = Vec::<OrderResidual>::new();
 
         for (pair_id, (mkt, ords)) in map {
-            let plan = crate::r#match::match_market(
+            let plan = r#match::match_market(
                 pair_id, batch_id.0, &mkt, ords, &owner_map, &self.hasher, use_fill_salt,
                 |b, i| salt_fn(b, i),
             );
