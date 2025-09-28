@@ -2,6 +2,7 @@ use engine::types::*;
 use async_trait::async_trait;
 use crate::commit::{PoseidonHasher, commit_orders, commit_fills, commit_markets};
 use engine::r#match;
+use tracing::{info, debug, warn, instrument};
 
 #[derive(Clone, Copy, Debug)]
 pub struct BlockNumber(pub u64);
@@ -59,6 +60,7 @@ pub struct BlockBuilder<D: Db, H: PoseidonHasher> {
 impl<D: Db, H: PoseidonHasher + engine::pid::Poseidon32> BlockBuilder<D, H> {
     pub fn new(db: D, hasher: H) -> Self { Self { db, hasher } }
 
+    #[instrument(level = "info", skip(self, salt_fn), fields(block_number = block_number.0, batch_id = batch_id.0, use_fill_salt))]
     pub async fn build_block(
         &self,
         block_number: BlockNumber,
@@ -68,13 +70,17 @@ impl<D: Db, H: PoseidonHasher + engine::pid::Poseidon32> BlockBuilder<D, H> {
         use_fill_salt: bool,
         mut salt_fn: impl FnMut(u64,u64)->[u8;32] + Send,
     ) -> anyhow::Result<Block> {
+        debug!("begin_block_build");
         let mut tx = self.db.begin_repeatable_read().await?;
 
         let markets = tx.load_active_markets().await?;
+        debug!(markets_len = markets.len(), "loaded_markets");
         let markets_root = commit_markets(&self.hasher, &markets);
 
         let orders = tx.load_open_orders_snapshot().await?;
+        debug!(orders_len = orders.len(), "loaded_orders_snapshot");
         let owner_map = tx.load_owner_pkhash_map_for_orders(&orders).await?;
+        debug!(owners = owner_map.len(), "loaded_owner_map");
 
         // group by market
         use std::collections::BTreeMap;
@@ -83,26 +89,32 @@ impl<D: Db, H: PoseidonHasher + engine::pid::Poseidon32> BlockBuilder<D, H> {
         for o in orders.iter().cloned() {
             if let Some((_, v)) = map.get_mut(&o.pair_id) { v.push(o); }
         }
+        debug!(markets_with_orders = map.len(), "grouped_orders_by_market");
 
         let mut all_fills = Vec::<FillDraft>::new();
         let mut all_residuals = Vec::<OrderResidual>::new();
 
         for (pair_id, (mkt, ords)) in map {
+            debug!(pair_id = pair_id.0, orders_for_market = ords.len(), "matching_market");
             let plan = r#match::match_market(
                 pair_id, batch_id.0, &mkt, ords, &owner_map, &self.hasher, use_fill_salt,
                 |b, i| salt_fn(b, i),
             );
+            debug!(pair_id = pair_id.0, fills = plan.fills.len(), residuals = plan.residuals.len(), "matched_market");
             all_fills.extend(plan.fills);
             all_residuals.extend(plan.residuals);
         }
+        info!(total_fills = all_fills.len(), total_residuals = all_residuals.len(), "matching_complete");
 
         // commitments
         let orders_commitment = commit_orders(&self.hasher, &orders);
         let fills_commitment  = commit_fills(&self.hasher, &all_fills);
+        debug!("computed_commitments");
 
         // persist
         tx.insert_fills(&all_fills).await?;
         tx.apply_residuals(&all_residuals).await?;
+        debug!("persisted_fills_and_residuals");
 
         let header = BlockHeader {
             block_number, batch_id, parent_state_root,
@@ -113,6 +125,7 @@ impl<D: Db, H: PoseidonHasher + engine::pid::Poseidon32> BlockBuilder<D, H> {
         tx.insert_batch_row(&header).await?;
         tx.link_fills_to_batch(block_number, &all_fills).await?;
         tx.commit().await?;
+        info!("block_persisted");
 
         Ok(Block {
             header,

@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+ark-groth16 = "0.4"
+ark-bn254   = "0.4"
+ark-std     = "0.4"
+ark-serialize = "0.4"
 anyhow = "1"
 axum = { version = "0.7", features = ["macros", "ws"] }
 serde = { version = "1", features = ["derive"] }
@@ -19,6 +23,12 @@ uuid = { version="1", features=["v4"] }
 hex = "0.4"
 blake3 = "1"
 async-trait = "0.1"
+# HTTP middleware with tracing
+tower-http = { version = "0.5", features = ["trace", "request-id"] }
 
 engine = { path = "../engine" }
+http = "1.3.1"
+rand = "0.8"
+
+
 
