@@ -10,6 +10,7 @@ use tokio::sync::RwLock;
 use tracing::{info, debug, warn};
 use tower_http::trace::{TraceLayer, DefaultMakeSpan, DefaultOnRequest, DefaultOnResponse};
 use tower_http::request_id::{PropagateRequestIdLayer, SetRequestIdLayer};
+use tower_http::cors::{CorsLayer, Any};
 use http::header::HeaderName;
 use tower_http::request_id::MakeRequestUuid;
 use rand::{Rng, seq::SliceRandom};
@@ -371,6 +372,12 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/orders", post(post_order))
         .route("/rpc", post(rpc_handler))
         .with_state(state)
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                .allow_headers(Any)
+        )
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(DefaultMakeSpan::new().level(tracing::Level::INFO))
